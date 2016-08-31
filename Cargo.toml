@@ -1,6 +1,6 @@
 [package]
 name = "grom"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Michael Shaw <michaeljshaw@gmail.com>"]
 
 [dependencies]
