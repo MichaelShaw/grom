@@ -1,3 +1,4 @@
+
 extern crate gm2;
 extern crate grom;
 
@@ -5,17 +6,33 @@ extern crate grom;
 extern crate glium;
 extern crate glutin;
 extern crate cgmath;
+extern crate rand;
 
 use gm2::{Vec3};
 use gm2::{input, geometry};
 use gm2::game::simple;
-
 use glutin::Event;
 
+
+use grom::game::world_gen::*;
+use grom::game::game_state::*;
+
+use rand::SeedableRng;
+
 fn main() {
+  let tiles = grom::game::tile::produce_tile_set();
+
   let window = gm2::render::build_window();
-  let mut render_state = grom::render::render_state::init(&window);
+  let mut render_state = grom::render::render_state::init(&window, &tiles);
   let mut input_state = input::InputState::default();
+
+  let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
+  let world = create_world(tiles, &mut rng);
+  let mut game_state = GameState {
+     world:world,
+     run_state: RunState::Running,
+  };
+  
   
   // let mut state = game::GameState { tick: 12 };
   // state = game::update(state);
@@ -37,7 +54,7 @@ fn main() {
     render_state.camera.viewport = window.get_framebuffer_dimensions();
     // render_state.camera.pitch = Rad(cyclical_time);
 
-    grom::render::render(&window, &render_state, time, color, &intersection);
+    grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
 
     let evs : Vec<glutin::Event> = window.poll_events().collect();
 

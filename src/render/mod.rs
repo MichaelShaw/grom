@@ -10,25 +10,30 @@ use gm2::render::texture::*;
 use gm2::render::quads::*;
 use glium::index;
 use glium::{Surface};
+use game::game_state::GameState;
 
 
 // pub use backend::glutin_backend::GlutinFacade as Display;
 // pub fn render<F>(display: &F, rs:&RenderState, time:f64, color: [f32; 4], intersection: &Option<Vec3>) where F : glium::backend::Facade {
-pub fn render(display: &glium::Display, rs:&render_state::RenderState, time:f64, color: [f32; 4], intersection: &Option<Vec3>) {
+pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, time:f64, color: [f32; 4], intersection: &Option<Vec3>) {
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
 
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
-    let wall_tile = TextureRegion::at(&rs.texture, 2, 0);
-    let man = TextureRegion::at(&rs.texture, 1, 0);
-    let man_shadow = TextureRegion::at(&rs.texture, 2, 0);
-    let indicator = TextureRegion::at(&rs.texture, 0, 0);
+    let ok_indicator = TextureRegion::at(&rs.texture, 0, 0);
+    let bad_indicator = TextureRegion::at(&rs.texture, 0, 1);
 
-    for x in 0..16 {
-        for y in 0..16 {
+
+    let row_size = game_state.world.tiles.len();
+    let tiles = game_state.world.tiles;
+    for x in 0..row_size {
+        for y in 0..row_size {
+            let tile_id = game_state.world.tiles[x][y].tile_id as usize;
+            let texture_region = &rs.tile_renderers[tile_id];
+            // let tile_id = 
         // tesselator.color = [(x as f32) * 1.0 / 16.0, (z as f32) * 1.0 / 16.0, 1.0, 1.0];
-            tesselator.draw_wall_tile(&wall_tile, 0, x as f64, y as f64, 0.0, 0.0, false);
-            tesselator.draw_wall_tile(&wall_tile, 1, x as f64, y as f64, 0.0, 0.1, false);
-            tesselator.draw_wall_tile(&wall_tile, 2, x as f64, y as f64, 0.0, 0.2, false);    
+            tesselator.draw_wall_tile(&texture_region, 0, x as f64, y as f64, 0.0, 0.0, false);
+            tesselator.draw_wall_tile(&texture_region, 1, x as f64, y as f64, 0.0, 0.1, false);
+            tesselator.draw_wall_tile(&texture_region, 2, x as f64, y as f64, 0.0, 0.2, false);    
         }
     }
 
@@ -37,7 +42,7 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, time:f64,
     if let &Some(its) = intersection {
         let x = round_down(its.x);
         let y = round_down(its.y);
-        tesselator.draw_wall_tile(&indicator, 0, x as f64, y as f64, 1.0 / 16.0 * 2.0, 0.55, false);
+        tesselator.draw_wall_tile(&ok_indicator, 0, x as f64, y as f64, 1.0 / 16.0 * 2.0, 0.55, false);
     }
 
 

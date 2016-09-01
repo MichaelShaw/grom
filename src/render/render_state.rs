@@ -3,10 +3,11 @@ extern crate cgmath;
 extern crate image;
 
 use gm2::render::{texture, shader};
+use gm2::render::texture::TextureRegion;
 use gm2::camera;
 use cgmath::Rad;
-
 use gm2::Vec3;
+use game::tile::Tiles;
 
 
 pub struct RenderState {
@@ -15,6 +16,7 @@ pub struct RenderState {
     pub camera: camera::Camera,
     pub base_pixels_per_unit: f64,
     pub zoom : f64,
+    pub tile_renderers : Vec<texture::TextureRegion>, 
 }
 
 impl RenderState {
@@ -27,7 +29,7 @@ impl RenderState {
     }
 }
 
-pub fn init<F>(display: &F) -> RenderState where F : glium::backend::Facade {
+pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backend::Facade {
     use std::path::{PathBuf, Path};
     use std::f64::consts::PI;
     use std::fs;
@@ -56,6 +58,12 @@ pub fn init<F>(display: &F) -> RenderState where F : glium::backend::Facade {
 
     let camera_pixels_per_unit = base_pixels_per_unit * zoom;
 
+    
+
+    let tile_texture_regions : Vec<TextureRegion> = tiles.all.iter().map (|tile| {
+        TextureRegion::at(&tiled_texture, (tile.id + 2) as u32, 0) 
+    }).collect();
+
     RenderState {
         program: shader::simple_program(display),
         texture: tiled_texture,
@@ -67,6 +75,7 @@ pub fn init<F>(display: &F) -> RenderState where F : glium::backend::Facade {
         },
         base_pixels_per_unit: base_pixels_per_unit, // fixed for a game, really ...
         zoom: zoom, // moveable
+        tile_renderers: tile_texture_regions,
     }
 }
 

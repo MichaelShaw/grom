@@ -1,26 +1,26 @@
 extern crate cgmath;
 
-use super::{InnerBlockLocation, INNER_BLOCK_RESOLUTION};
+use super::{InnerBlockLocation, INNER_BLOCK_RESOLUTION, TileId};
 use cgmath::vec2;
 
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Tile {
-    id: u32,
-    nodes: Vec<InnerBlockLocation>, // connected
+    pub id: TileId,
+    pub nodes: Vec<InnerBlockLocation>, // connected
 }
 
 pub struct Tiles {
-    all: Vec<Tile>,
-    empty: Tile,
-    starting_steps: Tile,
-    flat: Tile,
-    ramp_up_right: Tile,
-    ramp_down_right: Tile,
-    climb: Tile,
-    tents: Tile,
-    trees: Tile,
-    stone_head: Tile,
+    pub all: Vec<Tile>,
+    pub empty: Tile,
+    pub starting_steps: Tile,
+    pub flat: Tile,
+    pub ramp_up_right: Tile,
+    pub ramp_down_right: Tile,
+    pub climb: Tile,
+    pub tents: Tile,
+    pub trees: Tile,
+    pub stone_head: Tile,
 }
 
 pub fn produce_tile_set() -> Tiles {
@@ -36,8 +36,8 @@ pub fn produce_tile_set() -> Tiles {
 
     let all_bottom = vec![bottom_left, bottom_middle, bottom_right];
 
-    let mut available_id : u32 = 0;
-    let mut next_id = || -> u32 {
+    let mut available_id : u8 = 0;
+    let mut next_id = || -> u8 {
         let v = available_id;
         available_id += 1;
         v

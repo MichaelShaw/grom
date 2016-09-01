@@ -9,6 +9,8 @@ glutin = "0.6.1"
 image = "0.10.1"
 cgmath = "0.11.0"
 baal = "0.3.0"
+multimap = "0.3.0"
+rand = "0.3.14"
 
 [dependencies.gm2]
 path = "../gm2"
