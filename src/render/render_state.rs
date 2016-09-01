@@ -34,7 +34,7 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
     use std::f64::consts::PI;
     use std::fs;
 
-    let root_path = Path::new("img");
+    let root_path = Path::new("img/tiles");
 
     let raw : Vec<PathBuf> = fs::read_dir(root_path).unwrap().filter_map(|entry| {
         let p = entry.unwrap().path();
