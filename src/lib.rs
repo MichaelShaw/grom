@@ -7,7 +7,5 @@ extern crate cgmath;
 extern crate image;
 extern crate gm2;
 
-pub mod game {
-    pub mod game_state;
-}
+pub mod game;
 pub mod render;

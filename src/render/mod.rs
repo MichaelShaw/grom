@@ -27,8 +27,8 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, time:f64,
         for y in 0..16 {
         // tesselator.color = [(x as f32) * 1.0 / 16.0, (z as f32) * 1.0 / 16.0, 1.0, 1.0];
             tesselator.draw_wall_tile(&wall_tile, 0, x as f64, y as f64, 0.0, 0.0, false);
-            tesselator.draw_wall_tile(&wall_tile, 1, x as f64, y as f64, 1.0 / 16.0 * 2.0, 0.0, false);
-            tesselator.draw_wall_tile(&wall_tile, 2, x as f64, y as f64, 1.0 / 16.0 * 2.0, 0.0, false);    
+            tesselator.draw_wall_tile(&wall_tile, 1, x as f64, y as f64, 0.0, 0.1, false);
+            tesselator.draw_wall_tile(&wall_tile, 2, x as f64, y as f64, 0.0, 0.2, false);    
         }
     }
 
