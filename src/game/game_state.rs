@@ -4,7 +4,8 @@ extern crate multimap;
 use std::collections::{HashMap};
 use std::hash::{Hash, Hasher};
 
-use super::{ExactLocation, BlockLocation};
+// use super::{ExactLocation, BlockLocation};
+use super::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Tick {
@@ -14,6 +15,10 @@ pub struct Tick {
 impl Tick {
     pub fn succ(&self) -> Tick {
         tick(self.at + 1)
+    }
+
+    pub fn pred(&self) -> Tick {
+        tick(self.at - 1)
     }
 }
 
@@ -54,11 +59,26 @@ pub enum RunState {
 pub struct GameState {
     pub world:World,
     pub run_state: RunState,
+    pub tile_queue: Vec<TileId>,
+    pub place_tile_in: Tick, 
 }
+
+
+pub const WORLD_SIZE : usize = 100;
+pub type WorldGrid = [[PlacedTile; WORLD_SIZE];WORLD_SIZE]; 
 
 pub struct World {
     pub tick: Tick,
-    pub tiles: [[PlacedTile; 100]; 100],
+    pub tiles: WorldGrid,
     pub climbers_by_tile : multimap::MultiMap<BlockLocation, ClimberId>,
     pub climbers_by_id: HashMap<ClimberId, Climber>,
+}
+
+pub fn advance(world:&World) -> World {
+    World {
+        tick: world.tick.succ(),
+        tiles: world.tiles,
+        climbers_by_tile: world.climbers_by_tile.clone(),
+        climbers_by_id: world.climbers_by_id.clone(),
+    }
 }

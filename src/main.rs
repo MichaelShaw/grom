@@ -27,10 +27,12 @@ fn main() {
   let mut input_state = input::InputState::default();
 
   let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
-  let world = create_world(tiles, &mut rng);
+  let world = create_world(&tiles, &mut rng);
   let mut game_state = GameState {
      world:world,
      run_state: RunState::Running,
+     tile_queue: vec![tiles.flat.id],
+     place_tile_in: Tick { at: 0 },
   };
   
   
@@ -51,8 +53,13 @@ fn main() {
     time = time + (1.0 / 60.0);
     // let cyclical_time = (time % 8.0) / 8.0;
     // println!("cyclical time -> {}", cyclical_time);
+
+    
     render_state.camera.viewport = window.get_framebuffer_dimensions();
-    // render_state.camera.pitch = Rad(cyclical_time);
+    
+    game_state.world = advance(&game_state.world);
+
+    // println!("time is {:?}", game_state.world.tick);
 
     grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
 

@@ -58,8 +58,6 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
 
     let camera_pixels_per_unit = base_pixels_per_unit * zoom;
 
-    
-
     let tile_texture_regions : Vec<TextureRegion> = tiles.all.iter().map (|tile| {
         TextureRegion::at(&tiled_texture, (tile.id + 2) as u32, 0) 
     }).collect();

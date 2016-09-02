@@ -6,8 +6,7 @@ pub mod render_state;
 use cgmath::Rad;
 use gm2::{Vec3, Mat3};
 use gm2::render::*;
-use gm2::render::texture::*;
-use gm2::render::quads::*;
+use gm2::camera::*;
 use glium::index;
 use glium::{Surface};
 use game::game_state::GameState;
@@ -62,7 +61,34 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     };
 
     let mut target = display.draw();
+
+    let (width, height) = target.get_dimensions();
     target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
     target.draw(&vertex_buffer, &index::NoIndices(index::PrimitiveType::TrianglesList), &rs.program, &uniforms, &opaque_draw_params()).unwrap();
+
+    let interface_raw : [[f64; 4]; 4] = interface(width, height).into();
+    let interface_raw_downsized = down_size_m4(interface_raw);
+
+    let interface_uniforms = uniform! {
+        matrix: interface_raw_downsized,
+        u_texture_array: nearest_neighbour_texture,
+        u_color: color,
+        u_alpha_minimum: 0.05_f32,
+        u_sun_direction: adjusted_sun_direction_raw,
+    };
+
+    let mut tesselator = GeometryTesselator::new(tesselator_scale);
+
+    let ui_z = 90.0;
+    // draw ui
+    tesselator.draw_ui(&ok_indicator, 0, 0.0, 0.0, ui_z, false, 6.0);
+
+    let vertex_buffer = glium::VertexBuffer::persistent(display,&tesselator.tesselator.vertices).unwrap();
+    target.draw(&vertex_buffer, &index::NoIndices(index::PrimitiveType::TrianglesList), &rs.program, &interface_uniforms, &opaque_draw_params()).unwrap();
+
+    
+
+    
+
     target.finish().unwrap();
 }

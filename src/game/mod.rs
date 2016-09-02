@@ -11,3 +11,7 @@ pub type ExactLocation = (BlockLocation, InnerBlockLocation);
 pub const INNER_BLOCK_RESOLUTION : i32 = 16;
 
 pub type TileId = u8;
+
+pub use self::game_state::*;
+pub use self::tile::*;
+pub use self::world_gen::*;
