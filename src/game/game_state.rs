@@ -1,11 +1,12 @@
 extern crate gm2;
 extern crate multimap;
 
-use std::collections::{HashMap};
+use std::collections::{HashMap, VecDeque};
 use std::hash::{Hash, Hasher};
 
 // use super::{ExactLocation, BlockLocation};
 use super::*;
+use gm2::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Tick {
@@ -59,12 +60,13 @@ pub enum RunState {
 pub struct GameState {
     pub world:World,
     pub run_state: RunState,
-    pub tile_queue: Vec<TileId>,
+    pub tile_queue: VecDeque<TileId>,
     pub place_tile_in: Tick, 
 }
 
 
 pub const WORLD_SIZE : usize = 100;
+pub const WORLD_SIZE_I32 : i32 = WORLD_SIZE as i32;
 pub type WorldGrid = [[PlacedTile; WORLD_SIZE];WORLD_SIZE]; 
 
 pub struct World {
@@ -72,6 +74,12 @@ pub struct World {
     pub tiles: WorldGrid,
     pub climbers_by_tile : multimap::MultiMap<BlockLocation, ClimberId>,
     pub climbers_by_id: HashMap<ClimberId, Climber>,
+}
+
+impl World {
+    pub fn in_bounds(&self, v:Vec2i) -> bool {
+        v.x >= 0 && v.x < WORLD_SIZE_I32 && v.y >= 0 && v.y < WORLD_SIZE_I32
+    }
 }
 
 pub fn advance(world:&World) -> World {

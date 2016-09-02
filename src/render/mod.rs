@@ -4,17 +4,14 @@ extern crate cgmath;
 pub mod render_state;
 
 use cgmath::Rad;
-use gm2::{Vec3, Mat3};
+use gm2::*;
 use gm2::render::*;
 use gm2::camera::*;
 use glium::index;
 use glium::{Surface};
 use game::game_state::GameState;
 
-
-// pub use backend::glutin_backend::GlutinFacade as Display;
-// pub fn render<F>(display: &F, rs:&RenderState, time:f64, color: [f32; 4], intersection: &Option<Vec3>) where F : glium::backend::Facade {
-pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, time:f64, color: [f32; 4], intersection: &Option<Vec3>) {
+pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
 
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
@@ -35,9 +32,7 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     }
 
     if let &Some(its) = intersection {
-        let x = round_down(its.x);
-        let y = round_down(its.y);
-        tesselator.draw_wall_tile(&ok_indicator, 0, x as f64, y as f64, 0.0, 0.55, false);
+        tesselator.draw_wall_tile(&ok_indicator, 0, its.x as f64, its.y as f64, 0.0, 0.55, false);
     }
 
     let vertex_buffer = glium::VertexBuffer::persistent(display,&tesselator.tesselator.vertices).unwrap();
@@ -80,15 +75,23 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
 
     let ui_z = 90.0;
+
+    let tile_pixel_scale = 6.0_f64; 
+
+    for (i, tile_id) in game_state.tile_queue.iter().enumerate() {
+        let texture_region = &rs.tile_renderers[*tile_id as usize];
+        
+        let x = 10.0_f64;
+        let y = 10.0 + (tile_pixel_scale * texture_region.height() as f64 + 10.0) * (i as f64);
+
+        tesselator.draw_ui(&texture_region, 0, x, y, ui_z, false, tile_pixel_scale);
+        tesselator.draw_ui(&texture_region, 1, x, y, ui_z + 0.1, false, tile_pixel_scale);
+        tesselator.draw_ui(&texture_region, 2, x, y, ui_z + 0.2, false, tile_pixel_scale);
+    }
     // draw ui
-    tesselator.draw_ui(&ok_indicator, 0, 0.0, 0.0, ui_z, false, 6.0);
+    tesselator.draw_ui(&ok_indicator, 0, 10.0, 10.0, ui_z + 0.5, false, tile_pixel_scale);
 
     let vertex_buffer = glium::VertexBuffer::persistent(display,&tesselator.tesselator.vertices).unwrap();
     target.draw(&vertex_buffer, &index::NoIndices(index::PrimitiveType::TrianglesList), &rs.program, &interface_uniforms, &opaque_draw_params()).unwrap();
-
-    
-
-    
-
     target.finish().unwrap();
 }
