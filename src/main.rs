@@ -10,6 +10,7 @@ extern crate rand;
 
 use gm2::*;
 use gm2::game::simple;
+use gm2::audio::*;
 use glutin::Event;
 
 use grom::game::world_gen::*;
@@ -18,103 +19,123 @@ use grom::game::game_state::*;
 use rand::SeedableRng;
 use rand::Rng;
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashSet};
+
+use std::thread;
+use std::time::Duration;
 
 fn main() {
-  let tiles = grom::game::tile::produce_tile_set();
+    let window = gm2::render::build_window(String::from("Grom"));
 
-  let window = gm2::render::build_window(String::from("Grom"));
-  let mut render_state = grom::render::render_state::init(&window, &tiles);
-  let mut input_state = input::InputState::default();
+    let place_tile = String::from("place_tile");
+    let effect_names : HashSet<String> = [place_tile.clone()].iter().cloned().collect();
+    let audio_config = AudioConfiguration {
+        effect_directory: String::from("snd"),
+        music_directory: String::from("snd"),
 
-  let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
-  let world = create_world(&tiles, &mut rng);
-  let mut game_state = GameState {
-     world:world,
-     run_state: RunState::Running,
-     tile_queue: VecDeque::new(),
-     place_tile_in: Tick { at: 0 },
-  };
-  
-  
-  // let mut state = game::GameState { tick: 12 };
-  // state = game::update(state);
-  let color: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+        global_volume: 1.0,
 
+        effect_names: effect_names,
+        music_names: HashSet::new(),
+    };
 
-  let mut time = 0.0_f64;
-
-  use cgmath::{Zero};
-
-  let wall_plane = geometry::Plane::from_origin_normal(Vec3::zero(), Vec3::unit_z()); 
-  
-  let mut intersection : Option<Vec2i> = None;
-
-  simple::start_loop(|| {
-    time = time + (1.0 / 60.0);
-    // let cyclical_time = (time % 8.0) / 8.0;
-    // println!("cyclical time -> {}", cyclical_time);
+    let live_audio = init_audio(audio_config).unwrap();
 
     
-    render_state.camera.viewport = window.get_framebuffer_dimensions();
+
+    let tiles = grom::game::tile::produce_tile_set();
+
     
-    game_state.world = advance(&game_state.world);
-    if game_state.place_tile_in.at == 0 {
-      if game_state.tile_queue.len() < 5 {
-        let tile_id = rng.gen_range(0, tiles.all.len()) as u8;
-        game_state.tile_queue.push_back(tile_id);
-      }
-      game_state.place_tile_in = tick(300);
-    } else {
-      game_state.place_tile_in = game_state.place_tile_in.pred();
-    }
+    let mut render_state = grom::render::render_state::init(&window, &tiles);
+    let mut input_state = input::InputState::default();
 
-    // println!("time is {:?}", game_state.world.tick);
+    let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
+    let world = create_world(&tiles, &mut rng);
+    let mut game_state = GameState {
+        world:world,
+        run_state: RunState::Running,
+        tile_queue: VecDeque::new(),
+        place_tile_in: Tick { at: 0 },
+    };
+  
+    // let mut state = game::GameState { tick: 12 };
+    // state = game::update(state);
+    let color: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
-    grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
 
-    let evs : Vec<glutin::Event> = window.poll_events().collect();
+    let mut time = 0.0_f64;
 
-    let new_input_state = input::produce(&input_state, &evs);
-    let (mouse_x, mouse_y) = input_state.mouse.at;
-    let line = render_state.camera.ray_for_mouse_position(mouse_x, mouse_y);
-    intersection = line.and_then(|l| l.intersects(wall_plane) ).and_then (|v3| {
-      let v3i = gm2::round_down_v3(v3);
-      let v2i = v3i.truncate();
-      if game_state.world.in_bounds(v2i) {
-        Some(v2i)
-      } else {
-        None
-      }
+    use cgmath::{Zero};
+
+    let wall_plane = geometry::Plane::from_origin_normal(Vec3::zero(), Vec3::unit_z()); 
+
+    let mut intersection : Option<Vec2i> = None;
+
+    simple::start_loop(|| {
+        time = time + (1.0 / 60.0);
+        // let cyclical_time = (time % 8.0) / 8.0;
+        // println!("cyclical time -> {}", cyclical_time);
+
+
+        render_state.camera.viewport = window.get_framebuffer_dimensions();
+
+        game_state.world = advance(&game_state.world);
+        if game_state.place_tile_in.at == 0 {
+            if game_state.tile_queue.len() < 5 {
+                let tile_id = rng.gen_range(0, tiles.all.len()) as u8;
+                game_state.tile_queue.push_back(tile_id);
+            }
+            game_state.place_tile_in = tick(300);
+        } else {
+            game_state.place_tile_in = game_state.place_tile_in.pred();
+        }
+
+        // println!("time is {:?}", game_state.world.tick);
+
+        grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
+
+        let evs : Vec<glutin::Event> = window.poll_events().collect();
+
+        let new_input_state = input::produce(&input_state, &evs);
+        let (mouse_x, mouse_y) = input_state.mouse.at;
+        let line = render_state.camera.ray_for_mouse_position(mouse_x, mouse_y);
+        intersection = line.and_then(|l| l.intersects(wall_plane) ).and_then (|v3| {
+            let v3i = gm2::round_down_v3(v3);
+            let v2i = v3i.truncate();
+            if game_state.world.in_bounds(v2i) {
+                Some(v2i)
+            } else {
+                None
+            }
+        });
+
+        if let (Some(is), true) = (intersection, new_input_state.mouse.left_pushed())  {
+            if let Some(tile_id) = game_state.tile_queue.pop_front() {
+                game_state.world.tiles[is.x as usize][is.y as usize] = PlacedTile {
+                    tile_id: tile_id,
+                    snow: 0,
+                };
+                live_audio.play_effect(&place_tile, Vec3::new(0.0, 0.0, 0.0));
+            }
+        }
+
+        // let tile_id = game_state.tile_queue.remove(0);
+
+        if input_state != new_input_state {
+        // println!("input state -> {:?}", new_input_state);
+        // println!("line -> {:?} intersection {:?}", line, intersection);
+        }
+        input_state = new_input_state;
+
+        for event in evs {
+            match event {
+                Event::Closed | Event::KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Escape)) => return simple::Action::Stop,
+                _ => (), // println!("got {:?}", e),
+            }
+        }
+
+        simple::Action::Continue
     });
 
-
-
-
-    if let (Some(is), true) = (intersection, new_input_state.mouse.left_pushed())  {
-      if let Some(tile_id) = game_state.tile_queue.pop_front() {
-        game_state.world.tiles[is.x as usize][is.y as usize] = PlacedTile {
-          tile_id: tile_id,
-          snow: 0,
-        }
-      }
-    }
-
-    // let tile_id = game_state.tile_queue.remove(0);
-
-    if input_state != new_input_state {
-      // println!("input state -> {:?}", new_input_state);
-      // println!("line -> {:?} intersection {:?}", line, intersection);
-    }
-    input_state = new_input_state;
-
-    for event in evs {
-        match event {
-            Event::Closed | Event::KeyboardInput(glutin::ElementState::Released, _, Some(glutin::VirtualKeyCode::Escape)) => return simple::Action::Stop,
-            _ => (), // println!("got {:?}", e),
-        }
-    }
-
-    simple::Action::Continue
-  });
+    destroy(live_audio);
 }
