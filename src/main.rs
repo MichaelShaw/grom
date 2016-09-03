@@ -7,6 +7,7 @@ extern crate glium;
 extern crate glutin;
 extern crate cgmath;
 extern crate rand;
+extern crate ears;
 
 use gm2::*;
 use gm2::game::simple;
@@ -21,24 +22,26 @@ use rand::Rng;
 
 use std::collections::{VecDeque, HashSet};
 
+use ears::{Sound, AudioController};
+
+fn play_file(file: &str) {
+    // Create a new Sound.
+    let mut snd = Sound::new(file).unwrap();
+
+    // Play the Sound
+    snd.play();
+
+    // Wait until the end of the sound
+    while snd.is_playing() {}
+}
+
 fn main() {
     let window = gm2::render::build_window(String::from("Grom"));
 
     let place_tile = String::from("place_tile");
     let effect_names : HashSet<String> = [place_tile.clone()].iter().cloned().collect();
-    let audio_config = AudioConfiguration {
-        effect_directory: String::from("snd"),
-        music_directory: String::from("snd"),
-
-        global_volume: 1.0,
-
-        effect_names: effect_names,
-        music_names: HashSet::new(),
-    };
-
-    let live_audio = init_audio(audio_config).unwrap();
-
     
+    play_file("snd/place_tile.ogg");
 
     let tiles = grom::game::tile::produce_tile_set();
 
@@ -112,7 +115,6 @@ fn main() {
                     tile_id: tile_id,
                     snow: 0,
                 };
-                live_audio.play_effect(&place_tile, Vec3::new(0.0, 0.0, 0.0));
             }
         }
 
@@ -134,5 +136,4 @@ fn main() {
         simple::Action::Continue
     });
 
-    destroy(live_audio);
 }
