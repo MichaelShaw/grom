@@ -21,9 +21,6 @@ use rand::Rng;
 
 use std::collections::{VecDeque, HashSet};
 
-use std::thread;
-use std::time::Duration;
-
 fn main() {
     let window = gm2::render::build_window(String::from("Grom"));
 
