@@ -49,11 +49,15 @@ pub fn produce_tile_set() -> Tiles {
     let bottom_left = vec2(0, base_height);
     let bottom_middle = vec2(half_resolution, base_height);
     let bottom_right = vec2(INNER_BLOCK_RESOLUTION, base_height);
+
     let top_left = vec2(0, INNER_BLOCK_RESOLUTION + base_height);
     let top_middle = vec2(half_resolution, INNER_BLOCK_RESOLUTION + base_height);
     let top_right = vec2(INNER_BLOCK_RESOLUTION, INNER_BLOCK_RESOLUTION + base_height);
 
     let all_bottom = vec![bottom_left, bottom_middle, bottom_right];
+    let all_top = vec![top_left, top_middle, top_right];
+    // let mut all = all_bottom.clone();
+    // all.extend(all_top.iter().cloned());
 
     let mut available_id : u8 = 0;
     let mut next_id = || -> u8 {
@@ -61,14 +65,15 @@ pub fn produce_tile_set() -> Tiles {
         available_id += 1;
         v
     };
-    
+
+
 
     let empty = Tile { name: st("empty"), id: next_id(), nodes: Vec::new(), preferred_idle: None };
     let starting_steps = Tile { name: st("starting_steps"), id: next_id(), nodes: all_bottom.clone(), preferred_idle: middle_idle };
     let flat = Tile { name: st("flat"), id: next_id(), nodes: all_bottom.clone(), preferred_idle: middle_idle };
     let ramp_up_right = Tile { name: st("ramp_up_right"), id: next_id(), nodes: vec![bottom_left, top_right], preferred_idle: up_right_idle};
     let ramp_down_right = Tile { name: st("ramp_down_right"), id: next_id(), nodes: vec![top_left, bottom_right], preferred_idle: down_right_idle };
-    let climb = Tile { name: st("climb"), id: next_id(), nodes: vec![top_left, bottom_right, top_middle], preferred_idle: middle_idle};
+    let climb = Tile { name: st("climb"), id: next_id(), nodes: vec![bottom_left, bottom_right, bottom_middle, top_middle], preferred_idle: middle_idle};
     let tents = Tile { name: st("tents"), id: next_id(), nodes: all_bottom.clone(), preferred_idle: middle_idle};
     let trees = Tile { name: st("trees"), id: next_id(), nodes: all_bottom.clone(), preferred_idle: middle_idle};
     let stone_head = Tile { name: st("stone_head"), id: next_id(), nodes: all_bottom.clone(), preferred_idle: middle_idle};

@@ -16,7 +16,7 @@ pub fn advance_game<R : Rng>(game_state: &mut GameState, tiles:&Tiles, rng: &mut
                 let next_uniq = game_state.next_id();
                 game_state.tile_queue.push_back((tile.id, next_uniq));
             }
-            game_state.place_tile_in = tick(300);
+            game_state.place_tile_in = tick(120);
         } else {
             game_state.place_tile_in = game_state.place_tile_in.pred();
         }
@@ -59,28 +59,48 @@ pub fn advance_world<R : Rng>(world:&World, tiles: &Tiles, rng: &mut R) -> World
             let tile_id = new_world.tile_at(current_loc).id;
             let tile = tiles.with_id(tile_id);
 
-            let mut travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles);
-
-            println!("travellables -> {:?}", travellable_adjacents);
+            let mut travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles).into_iter().filter(|&(bl, _)| {
+                bl != climber.prev.loc
+            }).collect();
+            // println!("travellables -> {:?}", travellable_adjacents);
 
             new_world.unregister_climber_locations(climber);
 
             let new_climber = if !travellable_adjacents.is_empty() {
-                travellable_adjacents.sort_by_key(|&(bl, il)| {
-                    (bl != current_loc, il.y < current_loc.y) // not my current loc is good
-                });
+                let mut same_or_above : Vec<(Vec2i, Vec2i)> = Vec::new();
+                let mut below : Vec<(Vec2i, Vec2i)> = Vec::new();
 
-                println!("sorted -> {:?}", travellable_adjacents);
+                for (bl, il) in travellable_adjacents {
+                    if bl.y >= current_loc.y {
+                        same_or_above.push((bl, il));
+                    } else {
+                        below.push((bl, il));
+                    }
+                } 
+
+                let travel_vec : Vec<(Vec2i, Vec2i)> = if !same_or_above.is_empty() {
+                    same_or_above
+                } else {
+                    below
+                };
+
+                // println!("sorted -> {:?}", travellable_adjacents);
 
                 // we have somewhere to travel to if we want
-                let (nbl, nil) = travellable_adjacents[rng.gen_range(0, travellable_adjacents.len())];
+                let (nbl, nil) = travel_vec[rng.gen_range(0, travel_vec.len())];
 
-                println!("travelling to {:?} {:?}", nbl, nil);
+                // println!("travelling to {:?} {:?}", nbl, nil);
                 travel_to(climber, now, nbl, nil)
+                // idle(climber, now, 60)
             } else {
                 // take the preferred thingy
-                println!("idling");
-                idle(climber, now, 60)
+                // println!("idling");
+
+                if let Some((idle_a, idle_b)) = tile.preferred_idle {
+                    idle(climber, now, 120, idle_a)
+                } else {
+                    idle(climber, now, 120, vec2i(4,4))
+                }
             };
              
             new_world.register_climber_locations(&new_climber);
@@ -98,13 +118,13 @@ fn travel_to(climber: &Climber, at:Tick, loc:Vec2i, inner_loc: Vec2i) -> Climber
     let from_abs = absolute_location(climber.next.loc, climber.next.inner_loc);
     let to_abs = absolute_location(loc, inner_loc);
 
-    println!("from_abs {:?} to_abs {:?}", from_abs, to_abs);
+    // println!("from_abs {:?} to_abs {:?}", from_abs, to_abs);
 
     let diff = to_abs - from_abs;
     let v = Vec2::new(diff.x as f64, diff.y as f64).magnitude();
     let duration : u64 = (v / 4.0 * 60.0) as u64;
 
-    println!("travel distance {:?}, duration {:?}", v, duration);     
+    // println!("travel distance {:?}, duration {:?}", v, duration);     
 
     let next = TimedLocation {
         loc: loc ,
@@ -119,10 +139,13 @@ fn travel_to(climber: &Climber, at:Tick, loc:Vec2i, inner_loc: Vec2i) -> Climber
     }
 }
 
-fn idle(climber:&Climber, at:Tick, duration:u64) -> Climber {
-    let mut next = climber.next;
-    next.at = tick(at.at + duration); // set next in the duration
-
+fn idle(climber:&Climber, at:Tick, duration:u64, inner_loc: Vec2i) -> Climber {
+    let next = TimedLocation {
+        loc: climber.next.loc, 
+        inner_loc: inner_loc,
+        at: tick(at.at + duration),
+    };
+    
     Climber {
         prev: climber.next,
         next: next,
