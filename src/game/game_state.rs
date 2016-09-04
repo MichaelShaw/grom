@@ -21,6 +21,7 @@ pub struct LevelState {
     pub climbers: u32,
     pub spawn_every: u32,
     pub spawn_climber_in: u32,
+    pub speed: u32,
 }
 
 pub struct GameState {

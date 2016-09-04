@@ -28,30 +28,35 @@ pub const LEVELS : [LevelState; 5] = [
         climbers: 40,
         spawn_every: 60,
         spawn_climber_in: 0,
+        speed: 1,
     },
     LevelState {
         size: Vec2Size { x: 8, y: 8 },
         climbers: 40,
         spawn_every: 60,
         spawn_climber_in: 0,
+        speed: 1,
     },
     LevelState {
         size: Vec2Size { x: 16, y: 16 },
         climbers: 60,
         spawn_every: 60,
         spawn_climber_in: 0,
+        speed: 2,
     },
     LevelState {
         size: Vec2Size { x: 32, y: 32 },
         climbers: 60,
         spawn_every: 60,
         spawn_climber_in: 0,
+        speed: 4,
     },
     LevelState {
         size: Vec2Size { x: 64, y: 64 },
         climbers: 600,
         spawn_every: 5,
         spawn_climber_in: 0,
+        speed: 8,
     }
 ];
 
@@ -81,7 +86,7 @@ fn main() {
     let level_idx = level;
     let starting_level_state = LEVELS[level_idx as usize];
     
-    let window = gm2::render::build_window(String::from("Grom"));
+    let window = gm2::render::build_window(String::from("Grom"), starting_level_state.speed == 1);
 
     let mut tile_placement = Sound::new("snd/place_tile.ogg").unwrap();
     let mut walk_sound = Sound::new("snd/walk.ogg").unwrap();
@@ -124,12 +129,15 @@ fn main() {
 
     let mut intersection : Option<Vec2i> = None;
 
-    simple::start_loop(8, || {
+    // println!(" speed is -> {:?}", starting_level_state.speed);
+
+    simple::start_loop(starting_level_state.speed, || {
         time = time + (1.0 / 60.0);
         
         render_state.camera.viewport = window.get_framebuffer_dimensions();
-
+        
         grom::game::advance_game(&mut game_state, &tiles, &mut rng);
+         
 
         render_state.zoom.advance(0.15, 1.0 / 60.0);
         render_state.camera_target.advance(0.07, 1.0 / 60.0);
