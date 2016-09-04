@@ -59,52 +59,70 @@ pub fn advance_world<R : Rng>(world:&World, tiles: &Tiles, rng: &mut R) -> World
             let tile_id = new_world.tile_at(current_loc).id;
             let tile = tiles.with_id(tile_id);
 
-            let travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles).into_iter().filter(|&(bl, _)| {
-                bl != climber.prev.loc
-            }).collect();
-            // println!("travellables -> {:?}", travellable_adjacents);
+            let prev_loc = climber.prev.loc;
 
-            new_world.unregister_climber_locations(climber);
-
-            let new_climber = if !travellable_adjacents.is_empty() {
-                let mut same_or_above : Vec<(Vec2i, Vec2i)> = Vec::new();
-                let mut below : Vec<(Vec2i, Vec2i)> = Vec::new();
-
-                for (bl, il) in travellable_adjacents {
-                    if bl.y >= current_loc.y {
-                        same_or_above.push((bl, il));
-                    } else {
-                        below.push((bl, il));
-                    }
-                } 
-
-                let travel_vec : Vec<(Vec2i, Vec2i)> = if !same_or_above.is_empty() {
-                    same_or_above
-                } else {
-                    below
-                };
-
-                // println!("sorted -> {:?}", travellable_adjacents);
-
-                // we have somewhere to travel to if we want
-                let (nbl, nil) = travel_vec[rng.gen_range(0, travel_vec.len())];
-
-                // println!("travelling to {:?} {:?}", nbl, nil);
-                travel_to(climber, now, nbl, nil)
-                // idle(climber, now, 60)
-            } else {
-                // take the preferred thingy
-                // println!("idling");
-
-                if let Some((idle_a, _)) = tile.preferred_idle {
-                    idle(climber, now, 120, idle_a)
-                } else {
-                    idle(climber, now, 120, vec2i(4,4))
+            let mut killed = false;
+            if new_world.in_bounds(prev_loc) {
+                let prev_tile_id = new_world.tile_at(prev_loc).id;
+                let prev_tile = tiles.with_id(prev_tile_id);
+                if prev_tile.name == "stone_head" {
+                    killed = true
                 }
-            };
-             
-            new_world.register_climber_locations(&new_climber);
-            new_world.climbers_by_id.insert(new_climber.id, new_climber);
+            }
+
+
+            if killed {
+                new_world.climbers_by_id.remove(&climber.id);
+            } else {
+                let travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles).into_iter().filter(|&(bl, _)| {
+                    bl != climber.prev.loc
+                }).collect();
+                // println!("travellables -> {:?}", travellable_adjacents);
+
+                new_world.unregister_climber_locations(climber);
+
+                let new_climber = if tile.name == "stone_head" {
+                    idle(climber, now, 120, vec2i(4,4)) 
+                } else if !travellable_adjacents.is_empty() {
+                    let mut same_or_above : Vec<(Vec2i, Vec2i)> = Vec::new();
+                    let mut below : Vec<(Vec2i, Vec2i)> = Vec::new();
+
+                    for (bl, il) in travellable_adjacents {
+                        if bl.y >= current_loc.y {
+                            same_or_above.push((bl, il));
+                        } else {
+                            below.push((bl, il));
+                        }
+                    } 
+
+                    let travel_vec : Vec<(Vec2i, Vec2i)> = if !same_or_above.is_empty() {
+                        same_or_above
+                    } else {
+                        below
+                    };
+
+                    // println!("sorted -> {:?}", travellable_adjacents);
+
+                    // we have somewhere to travel to if we want
+                    let (nbl, nil) = travel_vec[rng.gen_range(0, travel_vec.len())];
+
+                    // println!("travelling to {:?} {:?}", nbl, nil);
+                    travel_to(climber, now, nbl, nil)
+                    // idle(climber, now, 60)
+                } else {
+                    // take the preferred thingy
+                    // println!("idling");
+
+                    if let Some((idle_a, _)) = tile.preferred_idle {
+                        idle(climber, now, 120, idle_a)
+                    } else {
+                        idle(climber, now, 120, vec2i(4,4))
+                    }
+                };
+                
+                new_world.register_climber_locations(&new_climber);
+                new_world.climbers_by_id.insert(new_climber.id, new_climber);
+            }
         }
     }
 

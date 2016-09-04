@@ -11,10 +11,13 @@ use gm2::color::*;
 use glium::index;
 use glium::{Surface};
 use game::*;
+use self::render_state::*;
+use cgmath::InnerSpace;
 
 
 
-pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, tiles:&Tiles, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
+pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_state:&GameState, tiles:&Tiles, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
+    let time_delta = 1.0 / 60.0;
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
 
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
@@ -33,16 +36,46 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
             tesselator.draw_wall_tile(&texture_region, 2, x as f64, y as f64, 0.0, 0.2, false);    
         }
     }
-
+    
+    
     for (_, climber) in game_state.world.climbers_by_id.iter() {
         let exact_location = climber.exact_location_at(now, 0.0);
         let climber_idx = (climber.id as usize) % rs.climber_renderers.len();
         let climber_region = &rs.climber_renderers[climber_idx][0];
-        tesselator.draw_wall_base_anchored_at(climber_region, 0, exact_location, 0.3, false);
+
+        let climber_state = rs.entity_springs.entry(climber.id).or_insert(ClimberRenderState::new(exact_location));
+        climber_state.spring.target = exact_location;
+        climber_state.spring.advance(1.0, time_delta);
+
+        let seed = ((climber.id as f64 * 1732.0) % 17.0) / 17.0;
+
+        let mut pos = climber_state.spring.position;
+
+        
+        if climber_state.spring.velocity.x.abs() * 1.2 > climber_state.spring.velocity.y.abs() { // so we're still "walking" on 45 degree steps
+             climber_state.walk_progress += climber_state.spring.velocity.magnitude() * time_delta;
+            let up = ((climber_state.walk_progress + seed) % 0.05) < 0.025;
+            if up {
+                pos.y += 0.02;
+            }
+        } 
+        pos.x += (climber_state.walk_progress * 64.0).sin() * 0.0025;
+        
+       
+        let depth_offset = seed * 0.20 + 0.11;
+        tesselator.draw_wall_base_anchored_at(climber_region, 0, pos, depth_offset, false);
     }
 
     if let &Some(its) = intersection {
-        
+        // show held tile
+        if let Some(&(tile_id, _)) = game_state.tile_queue.front() {
+            let texture_region = &rs.tile_renderers[tile_id as usize];
+            let x = its.x as f64;
+            let y = its.y as f64;
+            tesselator.draw_wall_tile(&texture_region, 0, x as f64, y as f64, 0.0, 0.3, false);
+            tesselator.draw_wall_tile(&texture_region, 1, x as f64, y as f64, 0.0, 0.4, false);
+            tesselator.draw_wall_tile(&texture_region, 2, x as f64, y as f64, 0.0, 0.5, false);    
+        }
 
         let indicator = if game_state.world.can_place_at(tiles, its) {
             ok_indicator

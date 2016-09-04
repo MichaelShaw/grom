@@ -22,7 +22,7 @@ use std::collections::{VecDeque};
 
 use ears::{Sound, AudioController};
 
-pub const LEVELS : [LevelState; 2] = [
+pub const LEVELS : [LevelState; 5] = [
     LevelState {
         size: Vec2Size { x: 4, y: 4 },
         climbers: 40,
@@ -32,6 +32,24 @@ pub const LEVELS : [LevelState; 2] = [
     LevelState {
         size: Vec2Size { x: 8, y: 8 },
         climbers: 40,
+        spawn_every: 60,
+        spawn_climber_in: 0,
+    },
+    LevelState {
+        size: Vec2Size { x: 16, y: 16 },
+        climbers: 60,
+        spawn_every: 60,
+        spawn_climber_in: 0,
+    },
+    LevelState {
+        size: Vec2Size { x: 32, y: 32 },
+        climbers: 60,
+        spawn_every: 60,
+        spawn_climber_in: 0,
+    },
+    LevelState {
+        size: Vec2Size { x: 64, y: 64 },
+        climbers: 60,
         spawn_every: 60,
         spawn_climber_in: 0,
     }
@@ -107,13 +125,14 @@ fn main() {
         
         // println!("camera spring {:?}", render_state.camera_target);
         
-        grom::render::render(&window, &render_state, &game_state, &tiles, time, color, &intersection);
+        grom::render::render(&window, &mut render_state, &game_state, &tiles, time, color, &intersection);
 
         let evs : Vec<glutin::Event> = window.poll_events().collect();
 
         // determining intersection
         let new_input_state = input::produce(&input_state, &evs);
         let (mouse_x, mouse_y) = input_state.mouse.at;
+        
         let line = render_state.camera.ray_for_mouse_position(mouse_x, mouse_y);
         intersection = line.and_then(|l| l.intersects(wall_plane) ).and_then (|v3| {
             let v3i = gm2::round_down_v3(v3);
@@ -127,11 +146,11 @@ fn main() {
 
         if new_input_state.mouse.mouse_wheel_delta != 0 {
             let zoom_adjust : f64 = if new_input_state.mouse.mouse_wheel_delta > 0 {
-                1.1
+                1.0
             } else {
-                0.9
+                -1.0
             };
-            let new_zoom = render_state.zoom.target * zoom_adjust;
+            let new_zoom : f64 = clamp(render_state.zoom.target + zoom_adjust, 1.0_f64, 64.0_f64);
             render_state.zoom.target = new_zoom;
         }
 
@@ -148,7 +167,7 @@ fn main() {
         if new_input_state.keys.down.contains(&VirtualKeyCode::D) {
             camera_vector.x += 1.
         }
-        render_state.camera_target.target += camera_vector * 3.0 / 60.0;
+        render_state.camera_target.target += camera_vector * 30.0 / 60.0 * 1.0 / render_state.zoom.target;
         
         // place tile
         if let (Some(is), true) = (intersection, new_input_state.mouse.left_pushed())  {

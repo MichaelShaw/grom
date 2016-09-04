@@ -22,7 +22,21 @@ pub struct RenderState {
     pub zoom : SpringState1,
     pub camera_target : SpringState3,
 
-    pub entity_springs : HashMap<ClimberId, SpringState3>,
+    pub entity_springs : HashMap<ClimberId, ClimberRenderState>,
+}
+
+pub struct ClimberRenderState {
+    pub spring: SpringState3,
+    pub walk_progress: f64,
+} 
+
+impl ClimberRenderState {
+    pub fn new(position:Vec3) -> ClimberRenderState {
+        ClimberRenderState {
+            spring: SpringState3::new(position),
+            walk_progress: 0.0,
+        }
+    } 
 }
 
 impl RenderState {
