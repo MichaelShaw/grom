@@ -21,8 +21,10 @@ use rand::SeedableRng;
 use rand::Rng;
 
 use std::collections::{VecDeque, HashSet};
+// use std::cell::RefCell;
+// use std::rc::Rc;
 
-use ears::{Sound, AudioController};
+use ears::{Sound, AudioController, SoundData};
 
 fn play_file(file: &str) {
     // Create a new Sound.
@@ -38,10 +40,7 @@ fn play_file(file: &str) {
 fn main() {
     let window = gm2::render::build_window(String::from("Grom"));
 
-    let place_tile = String::from("place_tile");
-    let effect_names : HashSet<String> = [place_tile.clone()].iter().cloned().collect();
-    
-    play_file("snd/place_tile.ogg");
+    let mut tile_placement = Sound::new("snd/place_tile.ogg").unwrap();
 
     let tiles = grom::game::tile::produce_tile_set();
 
@@ -115,6 +114,7 @@ fn main() {
                     tile_id: tile_id,
                     snow: 0,
                 };
+                tile_placement.play();
             }
         }
 
