@@ -19,10 +19,11 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     let bad_indicator = TextureRegion::at(&rs.texture, 0, 1);
 
 
-    let row_size = game_state.world.tiles.len();
-    let tiles = game_state.world.tiles;
-    for x in 0..16 {
-        for y in 0..16 {
+    let world_size = game_state.world.size;
+    // let tiles = &game_state.world.tiles;
+    
+    for x in 0..(world_size.x as usize) {
+        for y in 0..(world_size.y as usize) {
             let tile_id = game_state.world.tiles[x][y].tile_id as usize;
             let texture_region = &rs.tile_renderers[tile_id];
             tesselator.draw_wall_tile(&texture_region, 0, x as f64, y as f64, 0.0, 0.0, false);

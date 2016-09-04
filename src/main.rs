@@ -11,7 +11,6 @@ extern crate ears;
 
 use gm2::*;
 use gm2::game::simple;
-use gm2::audio::*;
 use glutin::Event;
 
 use grom::game::world_gen::*;
@@ -20,24 +19,13 @@ use grom::game::game_state::*;
 use rand::SeedableRng;
 use rand::Rng;
 
-use std::collections::{VecDeque, HashSet};
-// use std::cell::RefCell;
-// use std::rc::Rc;
+use std::collections::{VecDeque};
 
 use ears::{Sound, AudioController, SoundData};
 
-fn play_file(file: &str) {
-    // Create a new Sound.
-    let mut snd = Sound::new(file).unwrap();
-
-    // Play the Sound
-    snd.play();
-
-    // Wait until the end of the sound
-    while snd.is_playing() {}
-}
-
 fn main() {
+    let world_size = Vec2Size::new(4, 4);
+
     let window = gm2::render::build_window(String::from("Grom"));
 
     let mut tile_placement = Sound::new("snd/place_tile.ogg").unwrap();
@@ -49,12 +37,13 @@ fn main() {
     let mut input_state = input::InputState::default();
 
     let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
-    let world = create_world(&tiles, &mut rng);
+    let world = create_world(&tiles, &mut rng, world_size);
     let mut game_state = GameState {
         world:world,
         run_state: RunState::Running,
         tile_queue: VecDeque::new(),
         place_tile_in: Tick { at: 0 },
+        uniq_id: 0,
     };
   
     // let mut state = game::GameState { tick: 12 };

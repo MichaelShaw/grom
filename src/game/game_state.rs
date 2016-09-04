@@ -27,8 +27,6 @@ pub fn tick(at:u64) -> Tick {
     Tick { at: at }
 }
 
-// pub const GROUND_TILE : Tile = Tile { id: 0, nodes: vec![Vec2i { x: 0, y: 0 }] };
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct PlacedTile {
     pub tile_id: u8,
@@ -36,6 +34,7 @@ pub struct PlacedTile {
 }
 
 // block location, inner-block location
+
 
 pub type ClimberId = u32;
 
@@ -57,20 +56,30 @@ pub enum RunState {
     Running
 }
 
+pub type UniqGameId = u64;
+
 pub struct GameState {
     pub world:World,
     pub run_state: RunState,
     pub tile_queue: VecDeque<TileId>,
-    pub place_tile_in: Tick, 
+    pub place_tile_in: Tick,
+    pub uniq_id: UniqGameId,
+}
+
+impl GameState {
+    pub fn next_id(&mut self) -> UniqGameId {
+        let next_id = self.uniq_id;
+        self.uniq_id += 1;
+        next_id
+    }
 }
 
 
-pub const WORLD_SIZE : usize = 100;
-pub const WORLD_SIZE_I32 : i32 = WORLD_SIZE as i32;
-pub type WorldGrid = [[PlacedTile; WORLD_SIZE];WORLD_SIZE]; 
+pub type WorldGrid = Vec<Vec<PlacedTile>>; 
 
 pub struct World {
     pub tick: Tick,
+    pub size : Vec2Size,
     pub tiles: WorldGrid,
     pub climbers_by_tile : multimap::MultiMap<BlockLocation, ClimberId>,
     pub climbers_by_id: HashMap<ClimberId, Climber>,
@@ -78,14 +87,15 @@ pub struct World {
 
 impl World {
     pub fn in_bounds(&self, v:Vec2i) -> bool {
-        v.x >= 0 && v.x < WORLD_SIZE_I32 && v.y >= 0 && v.y < WORLD_SIZE_I32
+        v.x >= 0 && v.x < (self.size.x as i32) && v.y >= 0 && v.y < (self.size.y as i32)
     }
 }
 
 pub fn advance(world:&World) -> World {
     World {
         tick: world.tick.succ(),
-        tiles: world.tiles,
+        size: world.size,
+        tiles: world.tiles.clone(),
         climbers_by_tile: world.climbers_by_tile.clone(),
         climbers_by_id: world.climbers_by_id.clone(),
     }
