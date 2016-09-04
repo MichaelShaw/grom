@@ -10,25 +10,23 @@ use gm2::camera::*;
 use gm2::color::*;
 use glium::index;
 use glium::{Surface};
-use game::game_state::GameState;
+use game::*;
 
 
 
-pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
+pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, tiles:&Tiles, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
 
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
     let ok_indicator = rs.texture.at(0, 0);
     let bad_indicator = rs.texture.at(0, 1);
 
-
     let world_size = game_state.world.size;
-    // let tiles = &game_state.world.tiles;
     let now = game_state.world.tick;
     
     for x in 0..(world_size.x as usize) {
         for y in 0..(world_size.y as usize) {
-            let tile_id = game_state.world.tiles[x][y].tile_id as usize;
+            let tile_id = game_state.world.tiles[x][y].id as usize;
             let texture_region = &rs.tile_renderers[tile_id];
             tesselator.draw_wall_tile(&texture_region, 0, x as f64, y as f64, 0.0, 0.0, false);
             tesselator.draw_wall_tile(&texture_region, 1, x as f64, y as f64, 0.0, 0.1, false);
@@ -44,7 +42,14 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     }
 
     if let &Some(its) = intersection {
-        tesselator.draw_wall_tile(&ok_indicator, 0, its.x as f64, its.y as f64, 0.0, 0.55, false);
+        
+
+        let indicator = if game_state.world.can_place_at(tiles, its) {
+            ok_indicator
+        } else {
+            bad_indicator
+        };
+        tesselator.draw_wall_tile(&indicator, 0, its.x as f64, its.y as f64, 0.0, 0.55, false);
     }
 
     let vertex_buffer = glium::VertexBuffer::persistent(display,&tesselator.tesselator.vertices).unwrap();

@@ -9,14 +9,14 @@ use super::*;
 
 fn place(id: TileId) -> PlacedTile {
     PlacedTile { 
-        tile_id: id, 
+        id: id, 
         snow: 0, 
     } 
 }
 
 pub fn create_world<R : Rng>(tiles:&Tiles, rng: &mut R, size:Vec2Size) -> World  {
     let pt = PlacedTile { 
-        tile_id: tiles.default.id, 
+        id: tiles.default.id, 
         snow: 0, 
     };
 
@@ -28,7 +28,7 @@ pub fn create_world<R : Rng>(tiles:&Tiles, rng: &mut R, size:Vec2Size) -> World 
         for y in 0..size.y {
             let tile = &tiles.safe[rng.gen_range(0, tile_count)];
             let tile_id = tile.id;
-            placed_tiles[x][y] = PlacedTile { tile_id: tile_id, snow: 0 };
+            placed_tiles[x][y] = PlacedTile { id: tile_id, snow: 0 };
         }
     }
 

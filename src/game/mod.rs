@@ -3,6 +3,7 @@ pub mod tile;
 pub mod world_gen;
 pub mod climber;
 pub mod update;
+pub mod tick;
 
 use gm2::{Vec2i};
 
@@ -18,3 +19,4 @@ pub use self::tile::*;
 pub use self::world_gen::*;
 pub use self::climber::*;
 pub use self::update::*;
+pub use self::tick::*;

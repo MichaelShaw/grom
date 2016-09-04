@@ -13,19 +13,39 @@ use gm2::*;
 use gm2::game::simple;
 use glutin::Event;
 
-// use grom::game::world_gen::*;
-// use grom::game::game_state::*;
 use grom::game::*;
 
 use rand::SeedableRng;
+use rand::Rng;
 
 use std::collections::{VecDeque};
 
 use ears::{Sound, AudioController};
 
-fn main() {
-    let world_size = Vec2Size::new(4, 4);
+pub const LEVELS : [LevelState; 1] = [
+    LevelState {
+        size: Vec2Size { x: 4, y: 4 },
+        climbers: 40,
+        spawn_every: 60,
+        spawn_climber_in: 0,
+    }
+];
 
+use std::env;
+
+fn main() {
+    for argument in env::args() {
+        println!("{}", argument);
+    }
+
+    let mut rng = rand::thread_rng();
+    let random_seed = [rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32()];
+    // let manual_seed = [1_u32, 2, 3, 4];
+    let mut rng = rand::XorShiftRng::from_seed(random_seed);
+
+    let mut level_idx = 0;
+    let starting_level_state = LEVELS[level_idx];
+    
     let window = gm2::render::build_window(String::from("Grom"));
 
     let mut tile_placement = Sound::new("snd/place_tile.ogg").unwrap();
@@ -35,17 +55,16 @@ fn main() {
     let mut render_state = grom::render::render_state::init(&window, &tiles);
     let mut input_state = input::InputState::default();
 
-    let mut rng = rand::XorShiftRng::from_seed([1_u32, 2, 3, 4]); 
+     
     let mut game_state = GameState {
-        world: create_world(&tiles, &mut rng, world_size),
+        world: create_world(&tiles, &mut rng, starting_level_state.size),
         run_state: RunState::Running,
         tile_queue: VecDeque::new(),
         place_tile_in: Tick { at: 0 },
         uniq_id: 0,
+        level_state: starting_level_state,
     };
     
-    grom::game::spawn_climber(&mut game_state); // start first guy?
-
     render_state.camera.at = Vec3::new(game_state.world.size.x as f64 / 2.0, game_state.world.size.y as f64 / 2.0, 0.0);
 
     let color: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
@@ -65,7 +84,7 @@ fn main() {
 
         grom::game::advance_game(&mut game_state, &tiles, &mut rng);
         
-        grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
+        grom::render::render(&window, &render_state, &game_state, &tiles, time, color, &intersection);
 
         let evs : Vec<glutin::Event> = window.poll_events().collect();
         
@@ -84,13 +103,12 @@ fn main() {
         });
 
         // place tile
-        
         if let (Some(is), true) = (intersection, new_input_state.mouse.left_pushed())  {
             // can't place on top of climbers
-            if !game_state.world.climbers_by_tile.contains_key(&is) {
+            if game_state.world.can_place_at(&tiles, is) {
                 if let Some((tile_id, _)) = game_state.tile_queue.pop_front() {
                     game_state.world.tiles[is.x as usize][is.y as usize] = PlacedTile {
-                        tile_id: tile_id,
+                        id: tile_id,
                         snow: 0,
                     };
                     tile_placement.play();
