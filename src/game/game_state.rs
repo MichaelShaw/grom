@@ -27,14 +27,6 @@ pub fn tick(at:u64) -> Tick {
     Tick { at: at }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub struct PlacedTile {
-    pub tile_id: u8,
-    pub snow: u8, // counter of dispatching rocks?
-}
-
-// block location, inner-block location
-
 
 pub type ClimberId = u32;
 
@@ -61,7 +53,7 @@ pub type UniqGameId = u64;
 pub struct GameState {
     pub world:World,
     pub run_state: RunState,
-    pub tile_queue: VecDeque<TileId>,
+    pub tile_queue: VecDeque<(TileId, UniqGameId)>,
     pub place_tile_in: Tick,
     pub uniq_id: UniqGameId,
 }
@@ -74,6 +66,11 @@ impl GameState {
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct PlacedTile {
+    pub tile_id: TileId,
+    pub snow: u8, // counter of dispatching rocks?
+}
 
 pub type WorldGrid = Vec<Vec<PlacedTile>>; 
 

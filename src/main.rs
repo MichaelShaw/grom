@@ -21,7 +21,7 @@ use rand::Rng;
 
 use std::collections::{VecDeque};
 
-use ears::{Sound, AudioController, SoundData};
+use ears::{Sound, AudioController};
 
 fn main() {
     let world_size = Vec2Size::new(4, 4);
@@ -61,24 +61,21 @@ fn main() {
 
     simple::start_loop(|| {
         time = time + (1.0 / 60.0);
-        // let cyclical_time = (time % 8.0) / 8.0;
-        // println!("cyclical time -> {}", cyclical_time);
-
-
+        
         render_state.camera.viewport = window.get_framebuffer_dimensions();
 
+        // push tile
         game_state.world = advance(&game_state.world);
         if game_state.place_tile_in.at == 0 {
             if game_state.tile_queue.len() < 5 {
-                let tile_id = rng.gen_range(0, tiles.all.len()) as u8;
-                game_state.tile_queue.push_back(tile_id);
+                let tile = &tiles.safe[rng.gen_range(0, tiles.safe.len())];
+                let next_uniq = game_state.next_id();
+                game_state.tile_queue.push_back((tile.id, next_uniq));
             }
             game_state.place_tile_in = tick(300);
         } else {
             game_state.place_tile_in = game_state.place_tile_in.pred();
         }
-
-        // println!("time is {:?}", game_state.world.tick);
 
         grom::render::render(&window, &render_state, &game_state, time, color, &intersection);
 
@@ -97,8 +94,9 @@ fn main() {
             }
         });
 
+        // place tile
         if let (Some(is), true) = (intersection, new_input_state.mouse.left_pushed())  {
-            if let Some(tile_id) = game_state.tile_queue.pop_front() {
+            if let Some((tile_id, _)) = game_state.tile_queue.pop_front() {
                 game_state.world.tiles[is.x as usize][is.y as usize] = PlacedTile {
                     tile_id: tile_id,
                     snow: 0,
@@ -106,8 +104,6 @@ fn main() {
                 tile_placement.play();
             }
         }
-
-        // let tile_id = game_state.tile_queue.remove(0);
 
         if input_state != new_input_state {
         // println!("input state -> {:?}", new_input_state);

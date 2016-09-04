@@ -7,9 +7,12 @@ use cgmath::Rad;
 use gm2::*;
 use gm2::render::*;
 use gm2::camera::*;
+use gm2::color::*;
 use glium::index;
 use glium::{Surface};
 use game::game_state::GameState;
+
+
 
 pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_state:&GameState, time:f64, color: [f32; 4], intersection: &Option<Vec2i>) {
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
@@ -59,7 +62,10 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     let mut target = display.draw();
 
     let (width, height) = target.get_dimensions();
-    target.clear_color_and_depth((0.0, 0.0, 0.0, 0.0), 1.0);
+
+    let sky_blue = rgb(132, 193, 255);
+
+    target.clear_color_and_depth(sky_blue.float_tup(), 1.0);
     target.draw(&vertex_buffer, &index::NoIndices(index::PrimitiveType::TrianglesList), &rs.program, &uniforms, &opaque_draw_params()).unwrap();
 
     let interface_raw : [[f64; 4]; 4] = interface(width, height).into();
@@ -80,7 +86,7 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     let tile_pixel_scale = 6.0_f64; 
 
     for (i, tile_id) in game_state.tile_queue.iter().enumerate() {
-        let texture_region = &rs.tile_renderers[*tile_id as usize];
+        let texture_region = &rs.tile_renderers[tile_id.0 as usize];
         
         let x = 10.0_f64;
         let y = 10.0 + (tile_pixel_scale * texture_region.height() as f64 + 10.0) * (i as f64);
