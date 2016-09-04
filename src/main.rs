@@ -59,7 +59,7 @@ use std::env;
 use std::str::FromStr;
 
 use glutin::VirtualKeyCode;
-
+use cgmath::InnerSpace;
 
 fn main() {
     let mut string_args : Vec<String> = Vec::new();
@@ -78,12 +78,16 @@ fn main() {
     // let manual_seed = [1_u32, 2, 3, 4];
     let mut rng = rand::XorShiftRng::from_seed(random_seed);
 
-    let mut level_idx = level;
+    let level_idx = level;
     let starting_level_state = LEVELS[level_idx as usize];
     
     let window = gm2::render::build_window(String::from("Grom"));
 
     let mut tile_placement = Sound::new("snd/place_tile.ogg").unwrap();
+    let mut walk_sound = Sound::new("snd/walk.ogg").unwrap();
+    walk_sound.set_looping(true);
+    walk_sound.set_volume(0.0);
+    walk_sound.play();
 
     let tiles = grom::game::tile::produce_tile_set();
     
@@ -122,6 +126,20 @@ fn main() {
         render_state.zoom.advance(0.15, 1.0 / 60.0);
         render_state.camera_target.advance(0.07, 1.0 / 60.0);
         render_state.update_camera_from_springs();
+
+        let camera_at = render_state.camera_target.position;
+
+        ears::listener::set_position([camera_at.x as f32, camera_at.y as f32, camera_at.z as f32]);
+
+        let mut total_vel = 0.0_f64;
+        for (_,css) in &render_state.entity_springs {
+            total_vel += css.spring.velocity.magnitude();
+        }
+        let volume = total_vel.log(2.0) / 4.0;
+        walk_sound.set_volume(clamp(volume as f32, 0.0, 0.45));
+        // let v = total_vel.sqrt();
+        // let l = total_vel.log(2.0);
+        // println!("climber velocity {:?} sqrt {:?} log {:?}", total_vel, v, l);
         
         // println!("camera spring {:?}", render_state.camera_target);
         
