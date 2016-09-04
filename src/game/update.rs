@@ -59,7 +59,7 @@ pub fn advance_world<R : Rng>(world:&World, tiles: &Tiles, rng: &mut R) -> World
             let tile_id = new_world.tile_at(current_loc).id;
             let tile = tiles.with_id(tile_id);
 
-            let mut travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles).into_iter().filter(|&(bl, _)| {
+            let travellable_adjacents : Vec<(Vec2i, Vec2i)> = new_world.travellable_locations(current_loc, tiles).into_iter().filter(|&(bl, _)| {
                 bl != climber.prev.loc
             }).collect();
             // println!("travellables -> {:?}", travellable_adjacents);
@@ -96,7 +96,7 @@ pub fn advance_world<R : Rng>(world:&World, tiles: &Tiles, rng: &mut R) -> World
                 // take the preferred thingy
                 // println!("idling");
 
-                if let Some((idle_a, idle_b)) = tile.preferred_idle {
+                if let Some((idle_a, _)) = tile.preferred_idle {
                     idle(climber, now, 120, idle_a)
                 } else {
                     idle(climber, now, 120, vec2i(4,4))

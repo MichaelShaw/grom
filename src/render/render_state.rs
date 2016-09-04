@@ -7,26 +7,36 @@ use gm2::render::texture::TextureRegion;
 use gm2::camera;
 use cgmath::Rad;
 use gm2::Vec3;
-use game::tile::Tiles;
-
+use gm2::spring::*;
+use std::collections::HashMap;
+use game::*;
 
 pub struct RenderState {
     pub program: glium::Program,
     pub texture: texture::TiledTexture,
     pub camera: camera::Camera,
     pub base_pixels_per_unit: f64,
-    pub zoom : f64,
     pub tile_renderers : Vec<texture::TextureRegion>, 
     pub climber_renderers: [[TextureRegion; 4] ; 4],
+
+    pub zoom : SpringState1,
+    pub camera_target : SpringState3,
+
+    pub entity_springs : HashMap<ClimberId, SpringState3>,
 }
 
 impl RenderState {
     pub fn pixels_per_unit(&self) -> f64 {
-        self.base_pixels_per_unit * self.zoom 
+        self.base_pixels_per_unit * self.zoom.position 
     }
 
     pub fn base_units_per_pixel(&self) -> f64 {
         1.0 / self.base_pixels_per_unit
+    }
+
+    pub fn update_camera_from_springs(&mut self) {
+        self.camera.pixels_per_unit = self.pixels_per_unit();
+        self.camera.at = self.camera_target.position;
     }
 }
 
@@ -75,9 +85,14 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
             pixels_per_unit: camera_pixels_per_unit,
         },
         base_pixels_per_unit: base_pixels_per_unit, // fixed for a game, really ...
-        zoom: zoom, // moveable
+        
         tile_renderers: tile_texture_regions,
         climber_renderers: climber_renderers,
+
+        zoom: SpringState1::new(zoom),
+        camera_target: SpringState3::new(Vec3::new(0.0, 0.0, 0.0)),
+
+        entity_springs: HashMap::new(),
     }
 }
 

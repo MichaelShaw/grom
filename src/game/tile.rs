@@ -55,7 +55,7 @@ pub fn produce_tile_set() -> Tiles {
     let top_right = vec2(INNER_BLOCK_RESOLUTION, INNER_BLOCK_RESOLUTION + base_height);
 
     let all_bottom = vec![bottom_left, bottom_middle, bottom_right];
-    let all_top = vec![top_left, top_middle, top_right];
+    // let all_top = vec![top_left, top_middle, top_right];
     // let mut all = all_bottom.clone();
     // all.extend(all_top.iter().cloned());
 
