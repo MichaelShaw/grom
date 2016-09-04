@@ -36,6 +36,14 @@ pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_
             tesselator.draw_wall_tile(&texture_region, 2, x as f64, y as f64, 0.0, 0.2, false);    
         }
     }
+
+    for (i, &pos) in rs.cloud_positions.iter().enumerate() {
+        let cloud_renderer = rs.cloud_renderers[i % 4];
+
+        let mut render_pos = Vec3::new(pos.x, pos.y, -8.0);
+        render_pos -= rs.camera_target.position * pos.z * 0.25; // flexible parallax
+        tesselator.draw_wall_centre_anchored_at(&cloud_renderer, 0, render_pos, 0.0, false)
+    }
     
     
     for (_, climber) in game_state.world.climbers_by_id.iter() {
@@ -44,6 +52,7 @@ pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_
         let climber_region = &rs.climber_renderers[climber_idx][0];
 
         let climber_state = rs.entity_springs.entry(climber.id).or_insert(ClimberRenderState::new(exact_location));
+    
         climber_state.spring.target = exact_location;
         climber_state.spring.advance(1.0, time_delta);
 
@@ -60,7 +69,7 @@ pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_
             }
         } 
         pos.x += (climber_state.walk_progress * 64.0).sin() * 0.0025;
-        
+     
        
         let depth_offset = seed * 0.20 + 0.11;
         tesselator.draw_wall_base_anchored_at(climber_region, 0, pos, depth_offset, false);
@@ -136,6 +145,8 @@ pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_
         
         let x = 10.0_f64;
         let y = 10.0 + (tile_pixel_scale * texture_region.height() as f64 + 10.0) * (i as f64);
+
+        tesselator.color = [0.80, 0.80, 0.80, 1.0];
 
         tesselator.draw_ui(&texture_region, 0, x, y, ui_z, false, tile_pixel_scale);
         tesselator.draw_ui(&texture_region, 1, x, y, ui_z + 0.1, false, tile_pixel_scale);

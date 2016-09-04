@@ -18,6 +18,9 @@ pub struct RenderState {
     pub base_pixels_per_unit: f64,
     pub tile_renderers : Vec<texture::TextureRegion>, 
     pub climber_renderers: [[TextureRegion; 4] ; 4],
+    pub cloud_renderers: [TextureRegion; 4],
+
+    pub cloud_positions: Vec<Vec3>,
 
     pub zoom : SpringState1,
     pub camera_target : SpringState3,
@@ -25,6 +28,7 @@ pub struct RenderState {
     pub entity_springs : HashMap<ClimberId, ClimberRenderState>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ClimberRenderState {
     pub spring: SpringState3,
     pub walk_progress: f64,
@@ -88,6 +92,7 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
     }).collect();
 
     let climber_renderers = tiled_texture.at_d4(1, 0);
+    let cloud_renderers = [tiled_texture.at(2, 3), tiled_texture.at(2, 4), tiled_texture.at(3, 3), tiled_texture.at(3, 4)];
 
     RenderState {
         program: shader::simple_program(display),
@@ -102,6 +107,9 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
         
         tile_renderers: tile_texture_regions,
         climber_renderers: climber_renderers,
+        cloud_renderers: cloud_renderers,
+
+        cloud_positions: Vec::new(),
 
         zoom: SpringState1::new(zoom),
         camera_target: SpringState3::new(Vec3::new(0.0, 0.0, 0.0)),

@@ -33,9 +33,24 @@ impl Climber {
     pub fn exact_location_at(&self, tick:Tick, z:f64) -> Vec3 {
         let clamped = clamp(tick.at, self.prev.at.at, self.next.at.at);
         let action_duration = self.next.at.at - self.prev.at.at;
-        let progress = (clamped - self.prev.at.at) as f64 / action_duration as f64;
+        let progress = if action_duration <= 0 {
+            1.0
+        } else {
+            (clamped - self.prev.at.at) as f64 / action_duration as f64
+        };
+         
+        let prev = self.prev.exact_location(z);
+        let next = self.next.exact_location(z);
      
-        lerp(self.prev.exact_location(z), self.next.exact_location(z), progress)
+        let result = lerp(prev, next, progress);
+
+        if result.x.is_nan() {
+            println!("prev -> {:?} next -> {:?} action_duration {:?} progress {:?}", prev, next, action_duration, progress);
+            
+            panic!("exact location sucks :-()")
+        }
+
+        result
     }
 }
 

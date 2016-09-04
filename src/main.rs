@@ -49,8 +49,8 @@ pub const LEVELS : [LevelState; 5] = [
     },
     LevelState {
         size: Vec2Size { x: 64, y: 64 },
-        climbers: 60,
-        spawn_every: 60,
+        climbers: 600,
+        spawn_every: 5,
         spawn_climber_in: 0,
     }
 ];
@@ -73,8 +73,8 @@ fn main() {
     }).unwrap_or(0);
     
 
-    let mut rng = rand::thread_rng();
-    let random_seed = [rng.next_u32(), rng.next_u32(), rng.next_u32(), rng.next_u32()];
+    let mut threaded_rng = rand::thread_rng();
+    let random_seed = [threaded_rng.next_u32(), threaded_rng.next_u32(), threaded_rng.next_u32(), threaded_rng.next_u32()];
     // let manual_seed = [1_u32, 2, 3, 4];
     let mut rng = rand::XorShiftRng::from_seed(random_seed);
 
@@ -92,6 +92,14 @@ fn main() {
     let tiles = grom::game::tile::produce_tile_set();
     
     let mut render_state = grom::render::render_state::init(&window, &tiles);
+
+    for _ in 0..200 {
+        let x = rng.next_f64() * 60.0 - 30.0;
+        let y = rng.next_f64() * 60.0 - 30.0;
+        let z = rng.next_f64() * 3.0;
+        render_state.cloud_positions.push(Vec3::new(x, y, z));
+    }
+    
     let mut input_state = input::InputState::default();
 
      
@@ -116,7 +124,7 @@ fn main() {
 
     let mut intersection : Option<Vec2i> = None;
 
-    simple::start_loop(|| {
+    simple::start_loop(8, || {
         time = time + (1.0 / 60.0);
         
         render_state.camera.viewport = window.get_framebuffer_dimensions();
@@ -137,11 +145,6 @@ fn main() {
         }
         let volume = total_vel.log(2.0) / 4.0;
         walk_sound.set_volume(clamp(volume as f32, 0.0, 0.45));
-        // let v = total_vel.sqrt();
-        // let l = total_vel.log(2.0);
-        // println!("climber velocity {:?} sqrt {:?} log {:?}", total_vel, v, l);
-        
-        // println!("camera spring {:?}", render_state.camera_target);
         
         grom::render::render(&window, &mut render_state, &game_state, &tiles, time, color, &intersection);
 

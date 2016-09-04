@@ -20,6 +20,8 @@ pub fn create_world<R : Rng>(tiles:&Tiles, rng: &mut R, size:Vec2Size) -> World 
         snow: 0, 
     };
 
+
+
     let mut placed_tiles: WorldGrid = vec![vec![pt; size.y as usize]; size.x as usize];
 
     let tile_count = tiles.safe.len();
