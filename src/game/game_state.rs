@@ -2,9 +2,7 @@ extern crate gm2;
 extern crate multimap;
 
 use std::collections::{HashMap, VecDeque};
-use std::hash::{Hash, Hasher};
 
-// use super::{ExactLocation, BlockLocation};
 use super::*;
 use gm2::*;
 
@@ -14,6 +12,10 @@ pub struct Tick {
 }
 
 impl Tick {
+    pub fn plus(&self, n:u64) -> Tick {
+        tick(self.at + n)
+    }
+
     pub fn succ(&self) -> Tick {
         tick(self.at + 1)
     }
@@ -27,22 +29,7 @@ pub fn tick(at:u64) -> Tick {
     Tick { at: at }
 }
 
-
-pub type ClimberId = u32;
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Climber {
-    id: ClimberId,
-    morale: i8, // regenerates with time or tent, degrades on tragedy, negative is paniced
-    at: ExactLocation,
-}
-
-impl Hash for Climber {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
-}
-
 pub enum RunState {
     Paused,
     Running
@@ -59,6 +46,10 @@ pub struct GameState {
 }
 
 impl GameState {
+    pub fn running(&self) -> bool {
+        self.run_state == RunState::Running
+    }
+
     pub fn next_id(&mut self) -> UniqGameId {
         let next_id = self.uniq_id;
         self.uniq_id += 1;
@@ -83,17 +74,23 @@ pub struct World {
 }
 
 impl World {
-    pub fn in_bounds(&self, v:Vec2i) -> bool {
+    pub fn register_climber(&mut self, climber:Climber) {
+        self.register_climber_locations(&climber);
+        self.climbers_by_id.insert(climber.id, climber);
+    }
+
+    pub fn unregister_climber_locations(&mut self, climber:&Climber) {
+        // self.climbers_by_tile.remove(climber.next.loc, climber.id);
+        // self.climbers_by_tile.insert(climber.prev.loc, climber.id);
+    }
+
+    pub fn register_climber_locations(&mut self, climber: &Climber) {
+        self.climbers_by_tile.insert(climber.next.loc, climber.id);
+        self.climbers_by_tile.insert(climber.prev.loc, climber.id);
+    }
+
+    pub fn in_bounds(&self, v:BlockLocation) -> bool {
         v.x >= 0 && v.x < (self.size.x as i32) && v.y >= 0 && v.y < (self.size.y as i32)
     }
 }
 
-pub fn advance(world:&World) -> World {
-    World {
-        tick: world.tick.succ(),
-        size: world.size,
-        tiles: world.tiles.clone(),
-        climbers_by_tile: world.climbers_by_tile.clone(),
-        climbers_by_id: world.climbers_by_id.clone(),
-    }
-}

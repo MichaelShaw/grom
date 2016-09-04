@@ -17,6 +17,7 @@ pub struct RenderState {
     pub base_pixels_per_unit: f64,
     pub zoom : f64,
     pub tile_renderers : Vec<texture::TextureRegion>, 
+    pub climber_renderers: [[TextureRegion; 4] ; 4],
 }
 
 impl RenderState {
@@ -54,19 +55,21 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
     let (width, height) = display.get_context().get_framebuffer_dimensions();
 
     let base_pixels_per_unit = 16.0_f64;
-    let zoom = 3.0_f64;
+    let zoom = 10.0_f64;
 
     let camera_pixels_per_unit = base_pixels_per_unit * zoom;
 
     let tile_texture_regions : Vec<TextureRegion> = tiles.all.iter().map (|tile| {
-        TextureRegion::at(&tiled_texture, (tile.id + 2) as u32, 0) 
+        tiled_texture.at((tile.id + 2) as u32, 0) 
     }).collect();
+
+    let climber_renderers = tiled_texture.at_d4(1, 0);
 
     RenderState {
         program: shader::simple_program(display),
         texture: tiled_texture,
         camera: camera::Camera {
-            at: Vec3::new(8.0, 8.0, 0.0),
+            at: Vec3::new(0.0, 0.0, 0.0),
             pitch: Rad(PI / 4.0_f64),
             viewport: (width, height),
             pixels_per_unit: camera_pixels_per_unit,
@@ -74,6 +77,7 @@ pub fn init<F>(display: &F, tiles:&Tiles) -> RenderState where F : glium::backen
         base_pixels_per_unit: base_pixels_per_unit, // fixed for a game, really ...
         zoom: zoom, // moveable
         tile_renderers: tile_texture_regions,
+        climber_renderers: climber_renderers,
     }
 }
 

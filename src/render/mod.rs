@@ -18,12 +18,13 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
     let tesselator_scale = Vec3::new(rs.base_units_per_pixel(), rs.base_units_per_pixel(), rs.base_units_per_pixel());
 
     let mut tesselator = GeometryTesselator::new(tesselator_scale);
-    let ok_indicator = TextureRegion::at(&rs.texture, 0, 0);
-    let bad_indicator = TextureRegion::at(&rs.texture, 0, 1);
+    let ok_indicator = rs.texture.at(0, 0);
+    let bad_indicator = rs.texture.at(0, 1);
 
 
     let world_size = game_state.world.size;
     // let tiles = &game_state.world.tiles;
+    let now = game_state.world.tick;
     
     for x in 0..(world_size.x as usize) {
         for y in 0..(world_size.y as usize) {
@@ -33,6 +34,13 @@ pub fn render(display: &glium::Display, rs:&render_state::RenderState, game_stat
             tesselator.draw_wall_tile(&texture_region, 1, x as f64, y as f64, 0.0, 0.1, false);
             tesselator.draw_wall_tile(&texture_region, 2, x as f64, y as f64, 0.0, 0.2, false);    
         }
+    }
+
+    for (_, climber) in game_state.world.climbers_by_id.iter() {
+        let exact_location = climber.exact_location_at(now, 0.0);
+        let climber_idx = (climber.id as usize) % rs.climber_renderers.len();
+        let climber_region = &rs.climber_renderers[climber_idx][0];
+        tesselator.draw_wall_base_anchored_at(climber_region, 0, exact_location, 0.3, false);
     }
 
     if let &Some(its) = intersection {
