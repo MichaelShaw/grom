@@ -149,7 +149,7 @@ fn main() {
 
         let camera_at = render_state.camera_target.position;
 
-        ears::listener::set_position([camera_at.x as f32, camera_at.y as f32, camera_at.z as f32]);
+        // ears::listener::set_position([camera_at.x as f32, camera_at.y as f32, camera_at.z as f32]);
 
         let mut total_vel = 0.0_f64;
         for (_,css) in &render_state.entity_springs {
