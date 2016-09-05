@@ -88,7 +88,6 @@ pub fn can_travel(from:Vec2i, from_tile:&Tile, to:Vec2i, to_tile:&Tile) -> Optio
             return Some(*tl)
         }
     } 
-
     None
 }
 

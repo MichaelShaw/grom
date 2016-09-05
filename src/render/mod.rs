@@ -39,7 +39,6 @@ pub fn render(display: &glium::Display, rs:&mut render_state::RenderState, game_
 
     for (i, &pos) in rs.cloud_positions.iter().enumerate() {
         let cloud_renderer = rs.cloud_renderers[i % 4];
-
         let mut render_pos = Vec3::new(pos.x, pos.y, -8.0 + pos.z);
         render_pos -= rs.camera_target.position * pos.z * 0.25; // flexible parallax
         tesselator.draw_wall_centre_anchored_at(&cloud_renderer, 0, render_pos, 0.0, false)
