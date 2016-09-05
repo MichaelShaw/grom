@@ -20,7 +20,7 @@ use rand::Rng;
 
 use std::collections::{VecDeque};
 
-use ears::{Sound, AudioController};
+use ears::{Sound, Music, AudioController};
 
 pub const LEVELS : [LevelState; 5] = [
     LevelState {
@@ -76,6 +76,10 @@ fn main() {
     let level : u32 = first_opt.first().and_then(|my_str| {  
         u32::from_str(my_str).ok()        
     }).unwrap_or(0);
+
+    let mut music = Music::new("snd/come.and.find.me.ogg").unwrap();
+    music.set_volume(0.6);
+    music.play();
     
 
     let mut threaded_rng = rand::thread_rng();
