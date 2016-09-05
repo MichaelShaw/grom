@@ -78,7 +78,7 @@ fn main() {
     }).unwrap_or(0);
 
     let mut music = Music::new("snd/come.and.find.me.ogg").unwrap();
-    music.set_volume(0.6);
+    music.set_volume(0.5);
     music.play();
     
 
