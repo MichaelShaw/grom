@@ -6,5 +6,7 @@ It includes an ogg version of "Come and Find me" by Erik Skiff from https://soun
 
 It requires libsndfile and OpenAL at run/buildtime (see https://github.com/jeremyletang/ears)
 
+For mac: "brew install libsndfile openal-soft"
+
 It currently requires a copy of https://github.com/MichaelShaw/rust-game-24h in a nearby directory "../gm2"
 
