@@ -177,15 +177,17 @@ fn main() {
             }
         });
 
-        if new_input_state.mouse.mouse_wheel_delta != 0 {
-            let zoom_adjust : f64 = if new_input_state.mouse.mouse_wheel_delta > 0 {
-                1.0
-            } else {
-                -1.0
-            };
-            let new_zoom : f64 = clamp(render_state.zoom.target + zoom_adjust, 1.0_f64, 64.0_f64);
-            render_state.zoom.target = new_zoom;
-        }
+        let zoom_adjust : f64 = if new_input_state.mouse.mouse_wheel_delta > 0 || new_input_state.keys.pushed.contains(&VirtualKeyCode::Z) {
+            1.0
+        } else if new_input_state.mouse.mouse_wheel_delta < 0 || new_input_state.keys.pushed.contains(&VirtualKeyCode::X) {
+            -1.0
+        } else {
+            0.0
+        };
+        
+        let new_zoom : f64 = clamp(render_state.zoom.target + zoom_adjust, 1.0_f64, 64.0_f64);
+        render_state.zoom.target = new_zoom;
+        
 
         let mut camera_vector : Vec3 = Vec3::new(0.0, 0.0, 0.0);
         if new_input_state.keys.down.contains(&VirtualKeyCode::W) {
